@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mango便签</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #FFE5B4; /* 芒果黄背景 */
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #FFF9F0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.2);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            color: #FF8C00;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .tagline {
+            color: #FFA500;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        
+        .note-form {
+            margin-bottom: 30px;
+        }
+        
+        .note-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #FFD580;
+            border-radius: 8px;
+            background-color: #FFF;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        .note-input:focus {
+            outline: none;
+            border-color: #FF8C00;
+        }
+        
+        .submit-btn {
+            background-color: #FF8C00;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+            display: block;
+            margin-left: auto;
+        }
+        
+        .submit-btn:hover {
+            background-color: #FF6B00;
+        }
+        
+        .notes-container {
+            margin-top: 30px;
+        }
+        
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #FFD580;
+            padding-bottom: 10px;
+        }
+        
+        .notes-title {
+            color: #FF8C00;
+            font-size: 1.5rem;
+        }
+        
+        .delete-info {
+            color: #FF6B00;
+            font-size: 0.9rem;
+        }
+        
+        .note-item {
+            background-color: #FFF;
+            border-left: 5px solid #FFA500;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            transition: transform 0.2s;
+        }
+        
+        .note-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .note-content {
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .note-date {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        
+        .delete-btn {
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background-color 0.3s;
+        }
+        
+        .delete-btn:hover:not(.disabled) {
+            background-color: #FF5252;
+        }
+        
+        .delete-btn.disabled {
+            background-color: #CCCCCC;
+            cursor: not-allowed;
+        }
+        
+        .empty-notes {
+            text-align: center;
+            color: #888;
+            padding: 30px 0;
+            font-style: italic;
+        }
+        
+        .mango-decoration {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 150px;
+            height: 150px;
+            background-color: #FFA500;
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+        
+        .mango-decoration-2 {
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 120px;
+            height: 120px;
+            background-color: #FF8C00;
+            border-radius: 50%;
+            opacity: 0.08;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .notes-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .delete-info {
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="mango-decoration"></div>
+        <div class="mango-decoration-2"></div>
+        
+        <header>
+            <h1>Mango便签</h1>
+            <p class="tagline">记录生活点滴，留住美好瞬间</p>
+        </header>
+        
+        <section class="note-form">
+            <textarea class="note-input" placeholder="写下你的便签内容..."></textarea>
+            <button class="submit-btn">保存便签</button>
+        </section>
+        
+        <section class="notes-container">
+            <div class="notes-header">
+                <h2 class="notes-title">便签记录</h2>
+                <div class="delete-info" id="delete-info">今天还可以删除 <span id="delete-count">1</span> 条便签</div>
+            </div>
+            
+            <div id="notes-list">
+                <!-- 便签列表将在这里动态生成 -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const noteInput = document.querySelector('.note-input');
+            const submitBtn = document.querySelector('.submit-btn');
+            const notesList = document.getElementById('notes-list');
+            const deleteInfo = document.getElementById('delete-info');
+            const deleteCountSpan = document.getElementById('delete-count');
+            
+            let notes = [];
+            let deleteCount = 0;
+            let lastDeleteDate = '';
+            
+            // 初始化应用
+            initApp();
+            
+            // 保存便签
+            submitBtn.addEventListener('click', saveNote);
+            
+            // 初始化应用
+            function initApp() {
+                // 从localStorage加载便签数据
+                loadNotes();
+                
+                // 检查删除限制
+                checkDeleteLimit();
+                
+                // 渲染便签列表
+                renderNotes();
+            }
+            
+            // 从localStorage加载便签
+            function loadNotes() {
+                const savedNotes = localStorage.getItem('mangoNotes');
+                if (savedNotes) {
+                    notes = JSON.parse(savedNotes);
+                }
+                
+                // 加载删除限制数据
+                const deleteData = localStorage.getItem('mangoDeleteData');
+                if (deleteData) {
+                    const parsedData = JSON.parse(deleteData);
+                    deleteCount = parsedData.deleteCount || 0;
+                    lastDeleteDate = parsedData.lastDeleteDate || '';
+                }
+            }
+            
+            // 保存便签到localStorage
+            function saveNotes() {
+                localStorage.setItem('mangoNotes', JSON.stringify(notes));
+            }
+            
+            // 保存删除限制数据
+            function saveDeleteData() {
+                const deleteData = {
+                    deleteCount: deleteCount,
+                    lastDeleteDate: lastDeleteDate
+                };
+                localStorage.setItem('mangoDeleteData', JSON.stringify(deleteData));
+            }
+            
+            // 检查删除限制
+            function checkDeleteLimit() {
+                const today = new Date().toDateString();
+                
+                // 如果上次删除不是今天，重置删除计数
+                if (lastDeleteDate !== today) {
+                    deleteCount = 0;
+                    lastDeleteDate = today;
+                    saveDeleteData();
+                }
+                
+                // 更新UI显示
+                updateDeleteInfo();
+            }
+            
+            // 更新删除限制信息
+            function updateDeleteInfo() {
+                const remaining = 1 - deleteCount;
+                deleteCountSpan.textContent = remaining;
+                
+                if (remaining <= 0) {
+                    deleteInfo.innerHTML = '今天已无法删除更多便签';
+                }
+            }
+            
+            // 保存新便签
+            function saveNote() {
+                const content = noteInput.value.trim();
+                
+                if (content === '') {
+                    alert('请输入便签内容');
+                    return;
+                }
+                
+                const newNote = {
+                    id: Date.now(),
+                    content: content,
+                    date: new Date().toLocaleString('zh-CN')
+                };
+                
+                notes.unshift(newNote);
+                saveNotes();
+                renderNotes();
+                
+                // 清空输入框
+                noteInput.value = '';
+                
+                // 显示成功提示
+                showMessage('便签已保存！', 'success');
+            }
+            
+            // 删除便签
+            function deleteNote(id) {
+                // 检查删除限制
+                if (deleteCount >= 1) {
+                    showMessage('今天已无法删除更多便签', 'error');
+                    return;
+                }
+                
+                // 找到要删除的便签索引
+                const noteIndex = notes.findIndex(note => note.id === id);
+                
+                if (noteIndex !== -1) {
+                    // 从数组中移除便签
+                    notes.splice(noteIndex, 1);
+                    saveNotes();
+                    
+                    // 更新删除计数
+                    deleteCount++;
+                    saveDeleteData();
+                    
+                    // 重新渲染列表
+                    renderNotes();
+                    
+                    // 更新删除信息
+                    updateDeleteInfo();
+                    
+                    // 显示成功提示
+                    showMessage('便签已删除', 'success');
+                }
+            }
+            
+            // 渲染便签列表
+            function renderNotes() {
+                if (notes.length === 0) {
+                    notesList.innerHTML = '<div class="empty-notes">还没有便签，写下第一条吧！</div>';
+                    return;
+                }
+                
+                let html = '';
+                notes.forEach(note => {
+                    const canDelete = deleteCount < 1;
+                    
+                    html += `
+                        <div class="note-item">
+                            <div class="note-content">${note.content}</div>
+                            <div class="note-date">${note.date}</div>
+                            <button class="delete-btn ${canDelete ? '' : 'disabled'}" 
+                                    onclick="deleteNote(${note.id})" 
+                                    ${canDelete ? '' : 'disabled'}>
+                                删除
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                notesList.innerHTML = html;
+            }
+            
+            // 显示消息提示
+            function showMessage(message, type) {
+                // 创建消息元素
+                const messageEl = document.createElement('div');
+                messageEl.textContent = message;
+                messageEl.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 1000;
+                    transition: opacity 0.3s;
+                    opacity: 0;
+                    ${type === 'success' ? 'background-color: #4CAF50;' : 'background-color: #f44336;'}
+                `;
+                
+                document.body.appendChild(messageEl);
+                
+                // 显示动画
+                setTimeout(() => {
+                    messageEl.style.opacity = '1';
+                }, 10);
+                
+                // 3秒后隐藏并移除
+                setTimeout(() => {
+                    messageEl.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(messageEl);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // 将deleteNote函数暴露给全局作用域，以便在onclick中使用
+            window.deleteNote = deleteNote;
+        });
+    </script>
+</body>
+</html>
